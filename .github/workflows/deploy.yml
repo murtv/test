@@ -1,0 +1,41 @@
+name: Deploy
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+    
+    - name: Setup Gradle
+      uses: gradle/gradle-build-action@v2
+
+    - name: Setup SSH
+      uses: webfactory/ssh-agent@v0.8.0
+      with:
+        ssh-private-key: ${{ secrets.ID_RSA }}
+      
+    - name: Build
+      run: ./gradlew build
+        
+    - name: Deploy
+      run: |
+        ssh -o "StrictHostKeyChecking=no" -p 2226 webadmin@62.252.239.190 'mkdir -p test-api'
+        scp -o "StrictHostKeyChecking=no" -P 2226 build/libs/app.jar webadmin@62.252.239.190:test-api/app.jar
+        ssh -o "StrictHostKeyChecking=no" -p 2226 webadmin@62.252.239.190 'kill -9 $(lsof -t -i:9017)'
+        ssh -o "StrictHostKeyChecking=no" -p 2226 webadmin@62.252.239.190 'nohup java -jar test-api/api.jar -Dserver.port=9017 > ts-api/logs 2>/dev/null </dev/null &'

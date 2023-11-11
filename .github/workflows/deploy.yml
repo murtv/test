@@ -1,0 +1,49 @@
+name: Deploy
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  RMT_HOST: 62.252.239.190
+  RMT_USER: webadmin
+  RMT_PORT: 2226
+  APP_NAME: test-api
+  JAR_NAME: 
+  APP_PORT: 9017
+
+jobs:
+  main:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+    
+    - name: Setup Gradle
+      uses: gradle/gradle-build-action@v2
+
+    - name: Setup SSH
+      uses: webfactory/ssh-agent@v0.8.0
+      with:
+        ssh-private-key: $
+      
+    - name: Build
+      run: ./gradlew build
+        
+    - name: Deploy
+      run: |
+        ssh -o "StrictHostKeyChecking=no" -p $RMT_PORT $RMT_USER@$RMT_HOST mkdir -p $APP_NAME
+        scp -o "StrictHostKeyChecking=no" -P $RMT_PORT build/libs/$JAR_NAME $RMT_USER@$RMT_HOST:$APP_NAME/$JAR_NAME
+        ssh -o "StrictHostKeyChecking=no" -p $RMT_PORT $RMT_USER@$RMT_HOST kill -9 $(lsof -t -i:$APP_PORT) || true
+        ssh -o "StrictHostKeyChecking=no" -p $RMT_PORT $RMT_USER@$RMT_HOST nohup jdk-17.0.7/bin/java -jar -Dserver.port=$APP_PORT $APP_NAME/JAR_NAME >$APP_NAME/logs 2>$APP_NAME/logs </dev/null &

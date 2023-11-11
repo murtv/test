@@ -43,7 +43,7 @@ jobs:
         
     - name: Deploy
       run: |
-        ssh -o "StrictHostKeyChecking=no" -p $RMT_PORT $RMT_USER@$RMT_HOST 'mkdir -p $APP_NAME'
+        ssh -o "StrictHostKeyChecking=no" -p $RMT_PORT $RMT_USER@$RMT_HOST mkdir -p $APP_NAME
         scp -o "StrictHostKeyChecking=no" -P $RMT_PORT build/libs/$JAR_NAME $RMT_USER@$RMT_HOST:$APP_NAME/$JAR_NAME
-        ssh -o "StrictHostKeyChecking=no" -p $RMT_PORT $RMT_USER@$RMT_HOST 'kill -9 $(lsof -t -i:$APP_PORT)' || true
-        ssh -o "StrictHostKeyChecking=no" -p $RMT_PORT $RMT_USER@$RMT_HOST 'nohup jdk-17.0.7/bin/java -jar -Dserver.port=$APP_PORT $APP_NAME/JAR_NAME >$APP_NAME/logs 2>$APP_NAME/logs </dev/null &'
+        ssh -o "StrictHostKeyChecking=no" -p $RMT_PORT $RMT_USER@$RMT_HOST kill -9 $(lsof -t -i:$APP_PORT) || true
+        ssh -o "StrictHostKeyChecking=no" -p $RMT_PORT $RMT_USER@$RMT_HOST nohup jdk-17.0.7/bin/java -jar -Dserver.port=$APP_PORT $APP_NAME/JAR_NAME >$APP_NAME/logs 2>$APP_NAME/logs </dev/null &

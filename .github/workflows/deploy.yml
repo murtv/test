@@ -37,5 +37,5 @@ jobs:
       run: |
         ssh -o "StrictHostKeyChecking=no" -p 2226 webadmin@62.252.239.190 'mkdir -p test-api'
         scp -o "StrictHostKeyChecking=no" -P 2226 build/libs/app.jar webadmin@62.252.239.190:test-api/app.jar
-        ssh -o "StrictHostKeyChecking=no" -p 2226 webadmin@62.252.239.190 'kill -9 $(lsof -t -i:9017)'
+        ssh -o "StrictHostKeyChecking=no" -p 2226 webadmin@62.252.239.190 'kill -9 $(lsof -t -i:9017) ||'
         ssh -o "StrictHostKeyChecking=no" -p 2226 webadmin@62.252.239.190 'nohup java -jar test-api/api.jar -Dserver.port=9017 > ts-api/logs 2>/dev/null </dev/null &'
